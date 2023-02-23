@@ -1,33 +1,24 @@
 import { useState } from 'react'
 import * as ANTD from 'antd'
+import * as ICONS from '@ant-design/icons'
 import './App.css'
 import { useEffect } from 'react'
-
-const ChainParams = [
-  {
-    chainId: '0x38',
-    chainName: 'BNB Smart Chain Mainnet',
-    rpcUrls: ['https://bsc-dataseed1.binance.org/'],
-  },
-  {
-    chainId: '0x61',
-    chainName: 'BNB Smart Chain Testnet',
-    rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
-  },
-]
-
-const NetId = 0
+import { sliceArray, effectiveAddress } from './utils'
+import { Chain_Params, Net_Id } from './config'
 
 function App() {
   // input params
   const [tokenContract, setTokenContract] = useState('')
   const [singleAmount, setSingleAmount] = useState(0)
-  const [addressList, setAddressList] = useState('')
-  const [addressListFormat, setAddressListFormat] = useState('')
+  const [addressList, setAddressList] = useState([])
+  const [addressListFormat, setAddressListFormat] = useState([])
+  const [addressListSlice, setAddressListSlice] = useState([])
+  const [transferCount, setTransferCount] = useState(0)
 
   // wallet params
   const [account, setAccount] = useState('')
-  const [chainId, setChainId] = useState(ChainParams[NetId].chainId)
+  const [chainId, setChainId] = useState(Chain_Params[Net_Id].chainId)
+
   // wallet active
   const handleAccountsChanged = async (_accounts) => {
     if (_accounts.length === 0) {
@@ -39,6 +30,7 @@ function App() {
   const handleChainChanged = async (_chainId) => {
     window.location.reload()
   }
+
   // connect wallet
   const connectWallet = async () => {
     if (typeof window.ethereum !== 'undefined') {
@@ -64,7 +56,7 @@ function App() {
           try {
             await ethereum.request({
               method: 'wallet_addEthereumChain',
-              params: [ChainParams[NetId]],
+              params: [Chain_Params[Net_Id]],
             })
           } catch (addError) {
             console.error('addEthereumChain', addError)
@@ -75,6 +67,7 @@ function App() {
       }
     }
   }
+
   // event wallet
   useEffect(() => {
     ethereum.on('accountsChanged', handleAccountsChanged)
@@ -85,6 +78,7 @@ function App() {
       ethereum.removeListener('chainChanged', handleChainChanged)
     }
   }, [])
+
   // Input active
   const handleTokenContractChanged = async (e) => {
     setTokenContract(e.target.value)
@@ -95,9 +89,61 @@ function App() {
   const handleAddressListChanged = async (e) => {
     const value = e.target.value
     setAddressList(value)
+    // format address
     let list = value ? value.split('\n') : []
-    setAddressListFormat(list)
+    setAddressListFormat(effectiveAddress(list))
+    // slice array
+    setAddressListSlice(sliceArray(list, 3))
   }
+
+  // loding icon
+  const loadingIcon = (
+    <ICONS.LoadingOutlined
+      style={{
+        fontSize: 24,
+      }}
+      spin
+    />
+  )
+  const doneIcon = (
+    <ICONS.CheckCircleFilled
+      style={{
+        fontSize: 24,
+        color: '#52c41a',
+      }}
+    />
+  )
+  // loding btn
+  const [loadings, setLoadings] = useState([])
+  const [btnText, setBtnText] = useState('Transfer !')
+  const [isOngoing, setIsOngoing] = useState(false)
+  // ModalOpen
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  // submit
+  const submit = async () => {
+    // start
+    setIsOngoing(true)
+    setLoadings((prevLoadings) => {
+      const newLoadings = [...prevLoadings]
+      newLoadings[0] = true
+      return newLoadings
+    })
+    setBtnText('In Transaction ...')
+    setIsModalOpen(true)
+    // run code
+
+    // end
+    setTimeout(() => {
+      setLoadings((prevLoadings) => {
+        const newLoadings = [...prevLoadings]
+        newLoadings[0] = false
+        return newLoadings
+      })
+      setBtnText('Transfer !')
+      setIsOngoing(false)
+    }, 6000)
+  }
+
   return (
     <div className="App">
       <div className="container">
@@ -127,31 +173,44 @@ function App() {
                 className="input_item"
                 rows={4}
                 style={{ resize: 'none' }}
-                placeholder="maxLength is 6"
+                placeholder="Send Address ...."
                 value={addressList}
                 onChange={handleAddressListChanged}
               />
+            </section>
+            <section>
+              <div className="submit_row">
+                <ANTD.Button type="primary" disabled={!account} loading={loadings[0]} onClick={submit}>
+                  {account ? btnText : 'Please connect the wallet first!!'}
+                </ANTD.Button>
+              </div>
+              <ANTD.Modal
+                className="submit_modal"
+                title="In Transaction"
+                open={isModalOpen}
+                onOk={(e) => setIsModalOpen(false)}
+                okButtonProps={{ disabled: isOngoing }}
+              >
+                <div>
+                  {isOngoing ? <ANTD.Spin indicator={loadingIcon} /> : doneIcon}
+                  Some contents...
+                </div>
+              </ANTD.Modal>
             </section>
           </article>
           <ANTD.Divider />
           <footer>
             {!!account && (
-              <ANTD.Descriptions title="Transaction Details" layout="vertical" bordered>
-                <ANTD.Descriptions.Item label="From Account">{account}</ANTD.Descriptions.Item>
-                <ANTD.Descriptions.Item label="Token Contract">{account}</ANTD.Descriptions.Item>
-                <ANTD.Descriptions.Item label="Single Amount(ETH)">{singleAmount}</ANTD.Descriptions.Item>
-                <ANTD.Descriptions.Item label="Total Amount(ETH)">{singleAmount}</ANTD.Descriptions.Item>
-                <ANTD.Descriptions.Item label="Send Quantity">{addressListFormat.length}</ANTD.Descriptions.Item>
-              </ANTD.Descriptions>
+              <>
+                <ANTD.Descriptions title="Transaction Details" layout="vertical" bordered>
+                  <ANTD.Descriptions.Item label="From Account">{account}</ANTD.Descriptions.Item>
+                  <ANTD.Descriptions.Item label="Token Contract">{account}</ANTD.Descriptions.Item>
+                  <ANTD.Descriptions.Item label="Single Amount(ETH)">{singleAmount}</ANTD.Descriptions.Item>
+                  <ANTD.Descriptions.Item label="Total Amount(ETH)">{singleAmount}</ANTD.Descriptions.Item>
+                  <ANTD.Descriptions.Item label="Effective Address">{addressListFormat.length}</ANTD.Descriptions.Item>
+                </ANTD.Descriptions>
+              </>
             )}
-            <ANTD.List
-              size="small"
-              header={<div>Header</div>}
-              footer={<div>Footer</div>}
-              bordered
-              dataSource={addressListFormat}
-              renderItem={(item) => <ANTD.List.Item>{item}</ANTD.List.Item>}
-            />
           </footer>
         </main>
       </div>
