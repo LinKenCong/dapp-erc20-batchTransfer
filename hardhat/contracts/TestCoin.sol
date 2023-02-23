@@ -5,6 +5,8 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract TestCoin is ERC20 {
+    uint256 public testCount;
+
     constructor() ERC20("TestCoin", "TCT") {
         _mint(msg.sender, 1000000 * 10 ** 18);
     }
@@ -19,5 +21,9 @@ contract TestCoin is ERC20 {
 
     function send1000ToAccount(address account) external {
         transfer(account, ethToWei(1000));
+    }
+
+    function addTestCount() external {
+        testCount++;
     }
 }
