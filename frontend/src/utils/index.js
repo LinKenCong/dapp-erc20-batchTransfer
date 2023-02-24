@@ -1,5 +1,6 @@
 import { ethers, isAddress } from 'ethers'
 import { Contract_BatchTransfer } from '../config'
+import { ABI_batchTransfer, ABI_erc20 } from './abi'
 
 /**
  * filter effective Address
@@ -27,13 +28,23 @@ export const sliceArray = (_arr = [], _size = 100) => {
   return result
 }
 
-export const batchTransfer = async (_token, _arr = [], _amount) => {
+/**
+ * get batchTransfer Contract
+ * @returns ethers.Contract
+ */
+export const batchTransferContract = async () => {
   const provider = new ethers.BrowserProvider(window.ethereum)
   const signer = await provider.getSigner()
-  const contract = new ethers.Contract(
-    Contract_BatchTransfer,
-    ['function batchCall(address, address[] calldata, uint256) external payable'],
-    signer
-  )
-  await contract.batchCall(_token, _arr, _amount).then((res) => console.log(res))
+  return new ethers.Contract(Contract_BatchTransfer, ABI_batchTransfer, signer)
+}
+
+/**
+ * get erc20 Contract
+ * @param {string} _token
+ * @returns ethers.Contract
+ */
+export const erc20Contract = async (_token) => {
+  const provider = new ethers.BrowserProvider(window.ethereum)
+  const signer = await provider.getSigner()
+  return new ethers.Contract(_token, ABI_erc20, signer)
 }
