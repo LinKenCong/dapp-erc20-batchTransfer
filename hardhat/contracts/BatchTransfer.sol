@@ -16,7 +16,7 @@ contract BatchTransfer is Ownable {
     }
 
     function batchCall(address _token, address[] calldata _tos, uint256 _amount) external payable payFee {
-        require(IERC20(_token).balanceOf(address(this)) >= _tos.length * _amount, "Contract need sufficient balance");
+        IERC20(_token).transferFrom(msg.sender, address(this), _tos.length * _amount);
         for (uint8 i = 0; i < _tos.length; i++) {
             bytes memory callData = abi.encodeWithSignature("transfer(address,uint256)", _tos[i], _amount);
             (bool success, ) = address(_token).call(callData);

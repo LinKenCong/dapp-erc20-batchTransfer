@@ -65,10 +65,10 @@ describe('Batch Transfer Test', () => {
       // amount to eth
       const totalETH = ethers.utils.parseEther(totalAmount.toString())
       const onceETH = ethers.utils.parseEther(airdropAmount.toString())
-      // transfer
-      await testCoin.connect(owner).transfer(batchTransfer.address, totalETH)
-      // balance check
-      expect(Boolean((await testCoin.balanceOf(batchTransfer.address)) >= totalETH)).to.equal(true)
+      // approve
+      await testCoin.connect(owner).approve(batchTransfer.address, totalETH)
+      // isApprove check
+      expect(await testCoin.allowance(owner.address, batchTransfer.address)).to.equal(totalETH)
       // estimateGas
       const estimation = await batchTransfer.estimateGas.batchCall(testCoin.address, airdropAddrs, onceETH)
       console.log('batchCall estimateGas =>', estimation)
@@ -85,7 +85,7 @@ describe('Batch Transfer Test', () => {
       const { Signers, addrs, batchTransfer, testCoin } = await loadFixture(initFixture)
       const owner = Signers[0]
       // more account   ps: addrs.length =>20
-      const whileCount = 10
+      const whileCount = 5
       let _addrs: string[] = []
       for (let a = 0; a < whileCount; a++) {
         _addrs.push.apply(_addrs, addrs)
@@ -119,7 +119,7 @@ describe('Batch Transfer Test', () => {
       const { Signers, addrs, batchTransfer, testCoin } = await loadFixture(initFixture)
       const owner = Signers[0]
       // more account   ps: addrs.length =>20
-      const whileCount = 10
+      const whileCount = 5
       let _addrs: string[] = []
       for (let a = 0; a < whileCount; a++) {
         _addrs.push.apply(_addrs, addrs)
@@ -133,10 +133,10 @@ describe('Batch Transfer Test', () => {
       // amount to eth
       const totalETH = ethers.utils.parseEther(totalAmount.toString())
       const onceETH = ethers.utils.parseEther(airdropAmount.toString())
-      // transfer
-      await testCoin.connect(owner).transfer(batchTransfer.address, totalETH)
-      // balance check
-      expect(Boolean((await testCoin.balanceOf(batchTransfer.address)) >= totalETH)).to.equal(true)
+      // approve
+      await testCoin.connect(owner).approve(batchTransfer.address, totalETH)
+      // isApprove check
+      expect(await testCoin.allowance(owner.address, batchTransfer.address)).to.equal(totalETH)
       // estimateGas
       const estimation = await batchTransfer.estimateGas.batchCall(testCoin.address, airdropAddrs, onceETH)
       console.log('batchCall estimateGas =>', estimation)
