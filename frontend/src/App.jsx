@@ -4,14 +4,14 @@ import * as ICONS from '@ant-design/icons'
 import './App.css'
 import { useEffect } from 'react'
 import { sliceArray, effectiveAddress, erc20Contract, batchTransferContract } from './utils'
-import { Chain_Params, Contract_BatchTransfer, Net_Id } from './config'
+import { Chain_Params, Contract_BatchTransfer, Net_Id, SingleTransferSendCount } from './config'
 import { parseEther, formatEther, isAddress } from 'ethers'
 import { useRef } from 'react'
 
 function App() {
   /* input params */
-  const [tokenContract, setTokenContract] = useState('0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512')
-  const [singleAmount, setSingleAmount] = useState(1.23)
+  const [tokenContract, setTokenContract] = useState('')
+  const [singleAmount, setSingleAmount] = useState(0)
   const [addressList, setAddressList] = useState([])
   const [addressListFormat, setAddressListFormat] = useState([])
   const [addressListSlice, setAddressListSlice] = useState([])
@@ -97,7 +97,7 @@ function App() {
     const effectiveAddressList = effectiveAddress(list)
     setTransferCount(effectiveAddressList.length)
     // slice array
-    setAddressListSlice(sliceArray(effectiveAddressList, 5))
+    setAddressListSlice(sliceArray(effectiveAddressList, SingleTransferSendCount))
   }
 
   /* loding icon */
@@ -175,7 +175,7 @@ function App() {
     setIsModalOpen(true)
     // sset transfer schedule
     let scheduleStatus = { total: addressListSlice.length, schedule: 0, status: false }
-    setTransferSchedule(scheduleStatus)
+    setTransferSchedule({ ...scheduleStatus })
     // run code ------------------- //
     // parse totalSendAmount to eth
     const totalSendAmount = parseEther((singleAmount * transferCount).toString())
@@ -196,14 +196,6 @@ function App() {
       setApproveContract(true)
     }
 
-    // --------------------------- log
-
-    console.log('--------------------------- log')
-    console.log('old owner balance', balance)
-    console.log('old someone balance', await _erc20Contract.balanceOf(addressListSlice[addressListSlice.length - 1][0]))
-
-    // log ---------------------------
-
     // get contract
     {
       const _batchTransferContract = await batchTransferContract()
@@ -213,25 +205,17 @@ function App() {
       for (let i = 0; i < addressListSlice.length; i++) {
         // update transfer schedule
         scheduleStatus.schedule += 1
-        setTransferSchedule(scheduleStatus)
+        setTransferSchedule({ ...scheduleStatus })
         // call slice address list
         const transferBatchCall = await _batchTransferContract.batchCall(tokenContract, addressListSlice[i], onceAmount)
         await transferBatchCall.wait()
       }
     }
 
-    // --------------------------- log
-
-    console.log('now owner balance', await _erc20Contract.balanceOf(account))
-    console.log('now someone balance', await _erc20Contract.balanceOf(addressListSlice[addressListSlice.length - 1][0]))
-    console.log('log ---------------------------')
-
-    // log ---------------------------
-
     // end ------------------- //
     // update transfer schedule
     scheduleStatus.status = true
-    setTransferSchedule(scheduleStatus)
+    setTransferSchedule({ ...scheduleStatus })
     // update params
     setLoadings((prevLoadings) => {
       const newLoadings = [...prevLoadings]
