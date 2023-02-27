@@ -131,7 +131,7 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   /* Modal List */
   const [approveContract, setApproveContract] = useState(false)
-  const [transferSchedule, setTransferSchedule] = useCallbackState({})
+  const [transferSchedule, setTransferSchedule] = useState({})
   const modalList = [
     <ANTD.List.Item.Meta avatar={approveContract ? doneIcon : loadingIcon} description="Approve Contract" />,
     <ANTD.List.Item.Meta
@@ -139,23 +139,6 @@ function App() {
       description={`Transfer Schedule: ${transferSchedule.schedule}/${transferSchedule.total}`}
     />,
   ]
-
-  function useCallbackState(state) {
-    const cbRef = useRef()
-    const [data, setData] = useState(state)
-
-    useEffect(() => {
-      cbRef.current && cbRef.current(data)
-    }, [data])
-
-    return [
-      data,
-      function (val, callback) {
-        cbRef.current = callback
-        setData(val)
-      },
-    ]
-  }
 
   /* Verify Form Params */
   const verifyWrongParams = () => {
