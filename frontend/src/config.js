@@ -3,15 +3,15 @@ export const Chain_Params = [
     name: 'BSC Mainnet',
     chainId: '0x38',
     chainName: 'BNB Smart Chain Mainnet',
-    rpcUrls: ['https://bsc-dataseed1.binance.org/'],
-    batchTransferContract: '',
+    rpcUrls: ['https://bsc-mainnet.nodereal.io/v1/f0f44856cc05480d905d3c3f36103dd5'],
+    batchTransferContract: '0xa19a8481cE3E094bD448E162e244447A5cF6A77C',
   },
   {
     name: 'BSC Testnet',
     chainId: '0x61',
     chainName: 'BNB Smart Chain Testnet',
-    rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
-    batchTransferContract: '',
+    rpcUrls: ['https://bsc-testnet.nodereal.io/v1/f0f44856cc05480d905d3c3f36103dd5'],
+    batchTransferContract: '0xad14021a5006BDddAaE24F223047865B41Fe49AB',
   },
   {
     name: 'Hardhat Testnet',
@@ -25,10 +25,12 @@ export const SingleTransferSendCount = 200
 
 /*
 
-Test Accounts
+Deploy Test Accounts
 
 token: 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512
 
+0xaFA6bCdE9c014699A4AaF1f6e17CA0038f46ff21
+0x288590C2F1E9234139D9672BB435d3514f6f24C7
 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
 0x70997970C51812dc3A010C7d01b50e0d17dc79C8
 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
