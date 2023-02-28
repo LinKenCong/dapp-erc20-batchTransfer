@@ -1,12 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import * as ANTD from 'antd'
 import * as ICONS from '@ant-design/icons'
 import './App.css'
-import { useEffect } from 'react'
 import { sliceArray, effectiveAddress, erc20Contract, batchTransferContract } from './utils'
 import { Chain_Params, Contract_BatchTransfer, Net_Id, SingleTransferSendCount } from './config'
 import { parseEther, formatEther, isAddress } from 'ethers'
-import { useRef } from 'react'
+import ChainSelect from './components/ChainSelect'
 
 function App() {
   /* input params */
@@ -19,7 +18,7 @@ function App() {
 
   /* wallet params */
   const [account, setAccount] = useState('')
-  const [chainId, setChainId] = useState(Chain_Params[Net_Id].chainId)
+  const [netId, setNetId] = useState(0)
 
   /* wallet active */
   const handleAccountsChanged = async (_accounts) => {
@@ -30,7 +29,7 @@ function App() {
     }
   }
   const handleChainChanged = async (_chainId) => {
-    window.location.reload()
+    // window.location.reload()
   }
 
   /* connect wallet */
@@ -47,25 +46,29 @@ function App() {
             console.error(err)
           }
         })
-      // get chain
-      try {
-        await ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: chainId }],
-        })
-      } catch (switchError) {
-        if (switchError.code === 4902) {
-          try {
-            await ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [Chain_Params[Net_Id]],
-            })
-          } catch (addError) {
-            console.error('addEthereumChain', addError)
-          }
-        } else {
-          console.error('switchEthereumChainError', switchError)
+      await switchChain(netId)
+    }
+  }
+
+  const switchChain = async (_id) => {
+    // get chain
+    try {
+      await ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: Chain_Params[_id].chainId }],
+      })
+    } catch (switchError) {
+      if (switchError.code === 4902) {
+        try {
+          await ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [Chain_Params[_id]],
+          })
+        } catch (addError) {
+          console.error('addEthereumChain', addError)
         }
+      } else {
+        console.error('switchEthereumChainError', switchError)
       }
     }
   }
@@ -157,6 +160,7 @@ function App() {
 
   /* submit */
   const submit = async () => {
+    await switchChain(netId)
     // check params ------------------- //
     if (verifyWrongParams()) return setVerifyWrong({ status: true, msg: 'Please check parameters!' })
     // init params
@@ -226,11 +230,19 @@ function App() {
     setIsOngoing(false)
   }
 
+  /* Components - ChainSelect */
+  const chainId = async (_id) => {
+    setNetId(_id)
+    if (!account) return
+    await switchChain(_id)
+  }
+
   return (
     <div className="App">
       <div className="container">
         <main className="content">
           <header>
+            <ChainSelect chainId={chainId} />
             {/* Button => Connect Wallet */}
             <ANTD.Button type="primary" onClick={connectWallet}>
               {account || 'Connect Wallet'}
