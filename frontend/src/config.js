@@ -20,7 +20,7 @@ export const Chain_Params = [
   },
 ]
 export const Net_Id = 2
-export const SingleTransferSendCount = 10
+export const SingleTransferSendCount = 200
 
 /*
 
