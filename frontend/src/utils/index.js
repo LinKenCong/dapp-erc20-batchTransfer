@@ -1,5 +1,4 @@
 import { ethers, isAddress } from 'ethers'
-import { Contract_BatchTransfer } from '../config'
 import { ABI_batchTransfer, ABI_erc20 } from './abi'
 
 /**
@@ -32,10 +31,10 @@ export const sliceArray = (_arr = [], _size = 100) => {
  * get batchTransfer Contract
  * @returns ethers.Contract
  */
-export const batchTransferContract = async () => {
+export const batchTransferContract = async (_contract) => {
   const provider = new ethers.BrowserProvider(window.ethereum)
   const signer = await provider.getSigner()
-  return new ethers.Contract(Contract_BatchTransfer, ABI_batchTransfer, signer)
+  return new ethers.Contract(_contract, ABI_batchTransfer, signer)
 }
 
 /**

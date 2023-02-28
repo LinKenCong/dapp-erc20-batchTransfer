@@ -3,7 +3,7 @@ import * as ANTD from 'antd'
 import * as ICONS from '@ant-design/icons'
 import './App.css'
 import { sliceArray, effectiveAddress, erc20Contract, batchTransferContract } from './utils'
-import { Chain_Params, Contract_BatchTransfer, Net_Id, SingleTransferSendCount } from './config'
+import { Chain_Params, SingleTransferSendCount } from './config'
 import { parseEther, formatEther, isAddress } from 'ethers'
 import ChainSelect from './components/ChainSelect'
 
@@ -163,6 +163,8 @@ function App() {
   const submit = async () => {
     await switchChain(netId)
     // check params ------------------- //
+    if (!Chain_Params[netId].batchTransferContract)
+      return setVerifyWrong({ status: true, msg: 'Contract address not set!' })
     if (verifyWrongParams()) return setVerifyWrong({ status: true, msg: 'Please check parameters!' })
     // init params
     setTransactionError({ status: false, msg: '' })
@@ -193,10 +195,10 @@ function App() {
     // approve
     {
       try {
-        const allowanceAmount = await _erc20Contract.allowance(account, Contract_BatchTransfer)
+        const allowanceAmount = await _erc20Contract.allowance(account, Chain_Params[netId].batchTransferContract)
         // check/get erc20 token approve
         if (allowanceAmount < totalSendAmount) {
-          const tokenApprove = await _erc20Contract.approve(Contract_BatchTransfer, totalSendAmount)
+          const tokenApprove = await _erc20Contract.approve(Chain_Params[netId].batchTransferContract, totalSendAmount)
           await tokenApprove.wait()
         }
         // update approve status
@@ -211,7 +213,7 @@ function App() {
 
     // get contract
     {
-      const _batchTransferContract = await batchTransferContract()
+      const _batchTransferContract = await batchTransferContract(Chain_Params[netId].batchTransferContract)
       const onceAmount = parseEther(singleAmount.toString())
 
       // batch transfer
