@@ -126,6 +126,7 @@ function App() {
   )
   /* loding btn */
   const [verifyWrong, setVerifyWrong] = useState({ status: false, msg: '' })
+  const [transactionError, setTransactionError] = useState({ status: false, msg: '' })
   const [loadings, setLoadings] = useState([])
   const [btnText, setBtnText] = useState('Transfer !')
   const [isOngoing, setIsOngoing] = useState(false)
@@ -164,6 +165,7 @@ function App() {
     // check params ------------------- //
     if (verifyWrongParams()) return setVerifyWrong({ status: true, msg: 'Please check parameters!' })
     // init params
+    setTransactionError({ status: false, msg: '' })
     setVerifyWrong({ status: false, msg: '' })
     setApproveContract(false)
 
@@ -190,14 +192,21 @@ function App() {
 
     // approve
     {
-      const allowanceAmount = await _erc20Contract.allowance(account, Contract_BatchTransfer)
-      // check/get erc20 token approve
-      if (allowanceAmount < totalSendAmount) {
-        const tokenApprove = await _erc20Contract.approve(Contract_BatchTransfer, totalSendAmount)
-        await tokenApprove.wait()
+      try {
+        const allowanceAmount = await _erc20Contract.allowance(account, Contract_BatchTransfer)
+        // check/get erc20 token approve
+        if (allowanceAmount < totalSendAmount) {
+          const tokenApprove = await _erc20Contract.approve(Contract_BatchTransfer, totalSendAmount)
+          await tokenApprove.wait()
+        }
+        // update approve status
+        setApproveContract(true)
+      } catch (error) {
+        console.error('ApproveContract', error)
+        endSubmit()
+        setTransactionError({ status: true, msg: 'ApproveContract ERROR!' })
+        throw 'ApproveContract ERROR'
       }
-      // update approve status
-      setApproveContract(true)
     }
 
     // get contract
@@ -207,12 +216,26 @@ function App() {
 
       // batch transfer
       for (let i = 0; i < addressListSlice.length; i++) {
-        // update transfer schedule
-        scheduleStatus.schedule += 1
-        setTransferSchedule({ ...scheduleStatus })
-        // call slice address list
-        const transferBatchCall = await _batchTransferContract.batchCall(tokenContract, addressListSlice[i], onceAmount)
-        await transferBatchCall.wait()
+        try {
+          // update transfer schedule
+          scheduleStatus.schedule += 1
+          setTransferSchedule({ ...scheduleStatus })
+          // call slice address list
+          const transferBatchCall = await _batchTransferContract.batchCall(
+            tokenContract,
+            addressListSlice[i],
+            onceAmount
+          )
+          await transferBatchCall.wait()
+        } catch (error) {
+          console.error('BatchTransfer', error)
+          endSubmit()
+          setTransactionError({
+            status: true,
+            msg: `BatchTransfer ERROR! Untransferred since address:${addressListSlice[i][0]}`,
+          })
+          throw 'BatchTransfer ERROR'
+        }
       }
     }
 
@@ -220,6 +243,10 @@ function App() {
     // update transfer schedule
     scheduleStatus.status = true
     setTransferSchedule({ ...scheduleStatus })
+    endSubmit()
+  }
+
+  const endSubmit = () => {
     // update params
     setLoadings((prevLoadings) => {
       const newLoadings = [...prevLoadings]
@@ -295,11 +322,15 @@ function App() {
               >
                 {/* Modal Content */}
                 <aside>
-                  <ANTD.List
-                    itemLayout="horizontal"
-                    dataSource={modalList}
-                    renderItem={(item) => <ANTD.List.Item>{item}</ANTD.List.Item>}
-                  />
+                  {transactionError.status ? (
+                    <ANTD.Alert message={transactionError.msg} type="error" showIcon />
+                  ) : (
+                    <ANTD.List
+                      itemLayout="horizontal"
+                      dataSource={modalList}
+                      renderItem={(item) => <ANTD.List.Item>{item}</ANTD.List.Item>}
+                    />
+                  )}
                 </aside>
               </ANTD.Modal>
             </section>
